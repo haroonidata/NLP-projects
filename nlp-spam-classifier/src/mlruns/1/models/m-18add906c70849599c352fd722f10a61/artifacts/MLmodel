@@ -1,0 +1,23 @@
+artifact_path: file:C:/Users/Haroon/Documents/GitHub/NLP-projects/nlp-spam-classifier/src/mlruns/1/models/m-18add906c70849599c352fd722f10a61/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.14.5
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.9.0
+    skops_trusted_types: null
+mlflow_version: 3.13.0
+model_id: m-18add906c70849599c352fd722f10a61
+model_size_bytes: 66638
+model_uuid: m-18add906c70849599c352fd722f10a61
+prompts: null
+run_id: 29aad1527257421598f3e414198a54bc
+utc_time_created: '2026-06-13 09:15:38.595373'
