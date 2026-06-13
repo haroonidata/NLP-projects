@@ -15,6 +15,7 @@ from sklearn.metrics import (
     classification_report
 )
 
+mlflow.set_tracking_uri("sqlite:///../mlflow.db")
 mlflow.set_experiment("nlp-spam-classifier")
 
 df = pd.read_csv("../data/spam.csv", encoding="latin-1")
@@ -29,7 +30,7 @@ df["label"] = df["label"].map({
 
 df["clean_message"] = df["message"].apply(clean_text)
 
-stop_words = "english"
+stop_words = None
 class_weight = None
 
 vectorizer = TfidfVectorizer(stop_words=stop_words)
@@ -45,7 +46,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 with mlflow.start_run():
-
+    print("MLflow run started:", mlflow.active_run().info.run_id)
     model = LogisticRegression(
         class_weight=class_weight,
         max_iter=1000
@@ -79,3 +80,4 @@ with mlflow.start_run():
 
     print(confusion_matrix(y_test, predictions))
     print(classification_report(y_test, predictions))
+    print("MLflow run finished")
