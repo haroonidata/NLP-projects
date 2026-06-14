@@ -14,7 +14,7 @@ from sklearn.metrics import (
     confusion_matrix,
     classification_report
 )
-
+from evaluate import evaluate_model
 mlflow.set_tracking_uri("sqlite:///../mlflow.db")
 mlflow.set_experiment("nlp-spam-classifier")
 
@@ -30,8 +30,8 @@ df["label"] = df["label"].map({
 
 df["clean_message"] = df["message"].apply(clean_text)
 
-stop_words = None
-class_weight = None
+stop_words = "english"
+class_weight = "balanced"
 
 vectorizer = TfidfVectorizer(stop_words=stop_words)
 
@@ -45,7 +45,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42
 )
 
-with mlflow.start_run():
+with mlflow.start_run(run_name="threshold_0.3"):
     print("MLflow run started:", mlflow.active_run().info.run_id)
     model = LogisticRegression(
         class_weight=class_weight,
@@ -54,30 +54,46 @@ with mlflow.start_run():
 
     model.fit(X_train, y_train)
 
-    predictions = model.predict(X_test)
+    #predictions = model.predict(X_test)
+    spam_probs = model.predict_proba(X_test)[:, 1]
 
-    accuracy = accuracy_score(y_test, predictions)
-    precision = precision_score(y_test, predictions)
-    recall = recall_score(y_test, predictions)
-    f1 = f1_score(y_test, predictions)
+    predictions = (spam_probs >= 0.3).astype(int)
 
+    metrics = evaluate_model(
+        y_test,
+        predictions
+    )
     mlflow.log_param("vectorizer", "tfidf")
     mlflow.log_param("stop_words", stop_words)
     mlflow.log_param("class_weight", class_weight)
     mlflow.log_param("model", "logistic_regression")
 
-    mlflow.log_metric("accuracy", accuracy)
-    mlflow.log_metric("spam_precision", precision)
-    mlflow.log_metric("spam_recall", recall)
-    mlflow.log_metric("spam_f1", f1)
+    mlflow.log_metric(
+    "accuracy",
+    metrics["accuracy"]
+    )
 
+    mlflow.log_metric(
+        "spam_precision",
+        metrics["precision"]
+    )
+
+    mlflow.log_metric(
+        "spam_recall",
+        metrics["recall"]
+    )
+
+    mlflow.log_metric(
+        "spam_f1",
+        metrics["f1"]
+    )
     mlflow.sklearn.log_model(model, "spam_model")
-
-    print(f"Accuracy: {accuracy:.4f}")
-    print(f"Spam precision: {precision:.4f}")
-    print(f"Spam recall: {recall:.4f}")
-    print(f"Spam F1: {f1:.4f}")
 
     print(confusion_matrix(y_test, predictions))
     print(classification_report(y_test, predictions))
     print("MLflow run finished")
+
+import joblib
+
+joblib.dump(model, "../models/spam_model.pkl")
+joblib.dump(vectorizer, "../models/vectorizer.pkl")
